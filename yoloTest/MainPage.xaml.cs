@@ -1,12 +1,12 @@
 ﻿using System.Diagnostics;
-#if IOS
-//using Foundation;
-#endif
+using Microsoft.Maui.ApplicationModel;
+
 
 namespace yoloTest
 {
     public partial class MainPage : ContentPage
     {
+        private YoloVisionService _visionService = new YoloVisionService();
         //int count = 0;
 
         public MainPage()
@@ -25,11 +25,26 @@ namespace yoloTest
             if (status == PermissionStatus.Granted)
             {
                 // 這裡可以開始實作影像處理邏輯
-                ResultLabel.Text = "相機已啟動，準備分析影像...";
+                ResultLabel.Text = "Camera is started, ready to analyze images...";
+
+#if IOS
+                bool isLoaded = _visionService.LoadModel();
+                if(isLoaded)
+                {
+                    ResultLabel.Text = "Model Loaded Successfully, ready to stitch together camera footage";
+                }
+                else
+                {
+                    ResultLabel.Text = "Model Loading Failed";
+                }
+#else
+                ResultLabel.Text = "CoreML model loading is only implemented for iOS in this example.";
+
+#endif      
             }
             else
             {
-                await DisplayAlert("錯誤", "需要相機權限才能辨識障礙物", "OK");
+                await DisplayAlert("Error", "Camera permissions are required to identify obstacles", "OK");
             }
         }
 
