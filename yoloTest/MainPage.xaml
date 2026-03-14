@@ -7,12 +7,12 @@
     <VerticalStackLayout Spacing="10" Padding="20">
         <Label Text="障礙物辨識系統" FontSize="24" HorizontalOptions="Center" />
 
-        <toolkit:CameraView x:Name="cameraView" 
+        <!--<toolkit:CameraView x:Name="cameraView" 
                             WidthRequest="450" 
                             HeightRequest="500"
-                            HorizontalOptions="Center" />
+                            HorizontalOptions="Center" />-->
 
-        <Button Text="開始辨識" Clicked="OnStartDetectionClicked" />
+        <Button Text="Start Identifying" Clicked="OnStartDetectionClicked" />
 
         <Label x:Name="ResultLabel" Text="辨識結果：等待中..." FontSize="18" />
     </VerticalStackLayout>

@@ -9,13 +9,17 @@ namespace yoloTest
         private YoloVisionService _visionService = new YoloVisionService();
         //int count = 0;
 
+#if IOS
+        private Platforms.iOS.CameraStreamManager? _cameraStream;
+#endif
+
         public MainPage()
         {
             InitializeComponent();
         }
         private async void OnStartDetectionClicked(object sender, EventArgs e)
         {
-            // 檢查並請求相機權限
+            // Check and request camera permissions
             var status = await Permissions.CheckStatusAsync<Permissions.Camera>();
             if (status != PermissionStatus.Granted)
             {
@@ -24,7 +28,7 @@ namespace yoloTest
 
             if (status == PermissionStatus.Granted)
             {
-                // 這裡可以開始實作影像處理邏輯
+                // Start the camera stream and set up the vision service
                 ResultLabel.Text = "Camera is started, ready to analyze images...";
 
 #if IOS
@@ -32,6 +36,12 @@ namespace yoloTest
                 if(isLoaded)
                 {
                     ResultLabel.Text = "Model Loaded Successfully, ready to stitch together camera footage";
+                    // initialize and start the camera stream
+                    if(_cameraStream == null)
+                    {
+                        _cameraStream = new Platforms.iOS.CameraStreamManager(_visionService);
+                        _cameraStream.StartStream();
+                    }
                 }
                 else
                 {
