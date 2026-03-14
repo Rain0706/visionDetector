@@ -59,6 +59,23 @@ namespace yoloTest
                 // initialize image inference request
                 _visionRequest = new VNCoreMLRequest(_visionModel, (request, error) =>
                 {
+                    if(error != null)
+                    {
+                        Console.WriteLine($"Vision Error : {error.LocalizedDescription}");
+                        return;
+                    }
+                    // check which type of output the model actually is 
+                    var allResults = request.GetResults<VNObservation>();
+                    if(allResults != null && allResults.Length > 0)
+                    {
+                        var firstResultType = allResults[0].GetType().Name;
+                        // if the output isn't the expected type, send the result to the phone screen to view
+                        if(firstResultType != "VNRecognizedObjectObservation")
+                        {
+                            OnDetectionResult?.Invoke($"The model's format is wrong, current output is :{firstResultType}");
+                            return;
+                        }
+                    }
                     // when the request is completed, this callback will be called with the results
                     ProcessObservationResults(request.GetResults<VNRecognizedObjectObservation>());
                 });
@@ -108,6 +125,12 @@ namespace yoloTest
                 try
                 {
                     handler.Perform(new VNRequest[] {_visionRequest}, out var error);
+
+                    //if there's an error during the request, log it
+                    if(error != null)
+                    {
+                        Console.WriteLine($"Inference request Error : {error.LocalizedDescription}");
+                    }
                 }
                 catch(Exception ex)
                 {
