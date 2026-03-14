@@ -16,6 +16,15 @@ namespace yoloTest
         public MainPage()
         {
             InitializeComponent();
+            //register the AI detection, when there's a result, update the UI
+            _visionService.OnDetectionResult = (resultMessage) =>
+            {
+                //force a return to the main thread to update the UI
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    ResultLabel.Text = resultMessage;
+                });
+            };
         }
         private async void OnStartDetectionClicked(object sender, EventArgs e)
         {
@@ -40,7 +49,12 @@ namespace yoloTest
                     if(_cameraStream == null)
                     {
                         _cameraStream = new Platforms.iOS.CameraStreamManager(_visionService);
-                        _cameraStream.StartStream();
+                        // run the camera stream on a background thread to avoid blocking the UI
+                        Task.Run(() => 
+                        {
+                           _cameraStream.StartStream(); 
+                        });
+                        
                     }
                 }
                 else

@@ -16,6 +16,9 @@ namespace yoloTest
 {
     public class YoloVisionService
     {
+        //add a new assignment to return the result to MainPage
+        public Action<string>? OnDetectionResult { get; set; }
+
 #if IOS
         private VNCoreMLModel? _visionModel;
         private VNCoreMLRequest? _visionRequest;
@@ -77,19 +80,20 @@ namespace yoloTest
         private void ProcessObservationResults(VNRecognizedObjectObservation[]? observations)
         {
             if (observations == null || observations.Length == 0) return;
-
-            foreach (var observation in observations)
+            var bestObservation = observations.OrderByDescending(o => o.Labels[0].Confidence).FirstOrDefault();
+            if(bestObservation != null)
             {
                 //get the highest confidence label(ex: vehicle, pedestrian)
-                var bestLabel = observation.Labels[0];
-                //print the object that Confidence Level is higher than 0.5
-                if(bestLabel.Confidence > 0.5)
+                var bestLabel = bestObservation.Labels[0];
+                //for testing, we set the threshold to 0.2
+                if(bestLabel.Confidence > 0.2)
                 {
-                    Debug.WriteLine($"{bestLabel.Identifier} detected (confidence :{bestLabel.Confidence:F2})");
+                    string resultText = $"{bestLabel.Identifier} detected with confidence {bestLabel.Confidence:F2}";
+                    
+                    OnDetectionResult?.Invoke(resultText);
+                    Console.WriteLine(resultText); 
                 }
-                
-                // observation.BoundingBox can get the coordinates of the detected object in the image(0.0 ~1.0)
-            }
+            }           
         }
         public void PredictFrame(CVPixelBuffer pixelBuffer)
         {
