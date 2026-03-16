@@ -103,8 +103,8 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
 	</ItemGroup>
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
-		<BundleResource Include="Platforms\iOS\Resources\yolov8n.mlpackage\**\*">
-			<LogicalName>yolov8n.mlpackage\%(RecursiveDir)%(Filename)%(Extension)</LogicalName>
+		<BundleResource Include="Platforms\iOS\Resources\best.mlpackage\**\*">
+			<LogicalName>best.mlpackage\%(RecursiveDir)%(Filename)%(Extension)</LogicalName>
 		</BundleResource>
 	</ItemGroup>
 

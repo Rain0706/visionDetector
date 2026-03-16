@@ -10,6 +10,7 @@ using CoreML;
 using CoreVideo;
 using Vision;
 using Foundation;
+using ImageIO;
 #endif
 
 namespace yoloTest
@@ -117,7 +118,7 @@ namespace yoloTest
             if(_visionRequest == null) return;
 
             // create a request handler with the input image
-            var handler = new VNImageRequestHandler(pixelBuffer, new VNImageOptions());
+            var handler = new VNImageRequestHandler(pixelBuffer, CGImagePropertyOrientation.Right , new VNImageOptions()); //add the orientatioin for correct inference result
 
             //use ThreadPool to avoid blocking the main thread while performing the request
             ThreadPool.QueueUserWorkItem(_ =>
