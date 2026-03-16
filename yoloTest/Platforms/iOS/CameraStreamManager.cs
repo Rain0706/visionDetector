@@ -25,8 +25,10 @@ namespace yoloTest.Platforms.iOS
         public void StartStream()
         {
             _captureSession = new AVCaptureSession();
-            //set the capture session preset to 640*480 for better performance, deduction the memory usage and CPU load
-            _captureSession.SessionPreset = AVCaptureSession.Preset640x480;
+            ////set the capture session preset to 640*480 for better performance, deduction the memory usage and CPU load
+            //_captureSession.SessionPreset = AVCaptureSession.Preset640x480;
+            // 1280*720
+            _captureSession.SessionPreset = AVCaptureSession.Preset1280x720;
 
             //get the back camera
             var camera = AVCaptureDevice.GetDefaultDevice(AVMediaTypes.Video);
@@ -45,9 +47,9 @@ namespace yoloTest.Platforms.iOS
                 AlwaysDiscardsLateVideoFrames = true
             };
 
-            //set the format of the video frames to 32BGRA that CoreML prefers
-            output.WeakVideoSettings = new NSDictionary(CVPixelBuffer.PixelFormatTypeKey,
-                (int)CVPixelFormatType.CV32BGRA);
+            ////set the format of the video frames to 32BGRA that CoreML prefers
+            //output.WeakVideoSettings = new NSDictionary(CVPixelBuffer.PixelFormatTypeKey,
+            //    (int)CVPixelFormatType.CV32BGRA);
 
             //open a exclusive queue for processing the video frames
             var queue = new CoreFoundation.DispatchQueue("CameraStreamQueue");

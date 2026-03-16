@@ -82,7 +82,7 @@ namespace yoloTest
                 });
 
                 // set the image crop and scale option to fit the model's input size
-                _visionRequest.ImageCropAndScaleOption = VNImageCropAndScaleOption.ScaleFill;
+                _visionRequest.ImageCropAndScaleOption = VNImageCropAndScaleOption.CenterCrop;
 
                 Debug.WriteLine("YOLOv8 CoreML model have been loaded and initialized successfully!");
                 return true;
