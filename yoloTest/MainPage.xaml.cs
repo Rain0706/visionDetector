@@ -53,19 +53,31 @@ namespace yoloTest
                         Task.Run(() => 
                         {
                            _cameraStream.StartStream(); 
+
+                           MainThread.BeginInvokeOnMainThread(() =>
+                           {
+                                //get the native iOS view for the camera preview and add it to ContentView
+                                var uiView = CameraContainer.Handler?.PlatformView as UIKit.UIView;
+                                if(uiView != null && _cameraStream.Session != null)
+                                {
+                                    //get the length and width of the iPone's screen
+                                    var screenBounds = UIKit.UIScreen.MainScreen.Bounds; 
+                                    var previewLayer = new AVFoundation.AVCaptureVideoPreviewLayer(_cameraStream.Session)
+                                    {
+                                        Frame = uiView.Bounds,
+                                        VideoGravity = AVFoundation.AVLayerVideoGravity.ResizeAspectFill
+                                    };
+                                    // insert the preview layer into UI container
+                                    uiView.Layer.AddSublayer(previewLayer);
+                                    Console.WriteLine("Camera's preview layer already added in the screen");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("uiView or Session is null, cannot draw the screen");
+                                }
+                           });
                         });
-                        // get the native iOS view for the camera preview and add it to ContentView
-                        var uiView = CameraContainer.Handler?.PlatformView as UIKit.UIView;
-                        if(uiView != null && _cameraStream.Session != null)
-                        {
-                            var previewLayer = new AVFoundation.AVCaptureVideoPreviewLayer(_cameraStream.Session)
-                            {
-                                Frame = uiView.Bounds,
-                                VideoGravity = AVFoundation.AVLayerVideoGravity.ResizeAspectFill
-                            };
-                            // insert the preview layer into UI container
-                            uiView.Layer.AddSublayer(previewLayer);
-                        }
+                        
                         
                     }
                 }
