@@ -14,6 +14,7 @@ namespace yoloTest.Platforms.iOS
     //inherit AVCaptureVideoDateOutputSampleBufferDelegate to intercept camera frames
     public class CameraStreamManager : AVCaptureVideoDataOutputSampleBufferDelegate
     {
+        public AVCaptureSession? Session => _captureSession; //allow external to access the camera's session for drawing preview images
         private AVCaptureSession _captureSession;
         private YoloVisionService _visionService;
 

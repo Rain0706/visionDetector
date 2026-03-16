@@ -44,7 +44,7 @@ namespace yoloTest
                 bool isLoaded = _visionService.LoadModel();
                 if(isLoaded)
                 {
-                    ResultLabel.Text = "Model Loaded Successfully, ready to stitch together camera footage";
+                    ResultLabel.Text = "Model Loaded Successfully, ready to stitch together the camera footage";
                     // initialize and start the camera stream
                     if(_cameraStream == null)
                     {
@@ -54,6 +54,18 @@ namespace yoloTest
                         {
                            _cameraStream.StartStream(); 
                         });
+                        // get the native iOS view for the camera preview and add it to ContentView
+                        var uiView = CameraContainer.Handler?.PlatformView as UIKit.UIView;
+                        if(uiView != null && _cameraStream.Session != null)
+                        {
+                            var previewLayer = new AVFoundation.AVCaptureVideoPreviewLayer(_cameraStream.Session)
+                            {
+                                Frame = uiView.Bounds,
+                                VideoGravity = AVFoundation.AVLayerVideoGravity.ResizeAspectFill
+                            };
+                            // insert the preview layer into UI container
+                            uiView.Layer.AddSublayer(previewLayer);
+                        }
                         
                     }
                 }
