@@ -82,7 +82,7 @@ namespace yoloTest
                 });
 
                 // set the image crop and scale option to fit the model's input size
-                _visionRequest.ImageCropAndScaleOption = VNImageCropAndScaleOption.CenterCrop;
+                _visionRequest.ImageCropAndScaleOption = VNImageCropAndScaleOption.ScaleFill;
 
                 Debug.WriteLine("YOLOv8 CoreML model have been loaded and initialized successfully!");
                 return true;
@@ -94,7 +94,8 @@ namespace yoloTest
                 return false;
             }
         }
-
+        // add a variable to store the time of the last inference
+        private DateTime _lastUpdate = DateTime.MinValue;
         private void ProcessObservationResults(VNRecognizedObjectObservation[]? observations)
         {
             if (observations == null || observations.Length == 0) return;
@@ -104,29 +105,29 @@ namespace yoloTest
                 //get the highest confidence label(ex: vehicle, pedestrian)
                 var bestLabel = bestObservation.Labels[0];
                 //for testing, we set the threshold to 0.2
-                if(bestLabel.Confidence > 0.2)
+                //if(bestLabel.Confidence > 0.2)
+                if(bestLabel.Confidence > 0.4) // set a higher threshold to reduce the false positive
                 {
-                    string resultText = $"{bestLabel.Identifier} detected with confidence {bestLabel.Confidence:F2}";
+                    if((DateTime.Now - _lastUpdate).TotalMilliseconds > 500) // check if it's been more than 500ms since the last inference reuslt
+                    {
+                        string resultText = $"{bestLabel.Identifier} detected with confidence {bestLabel.Confidence:F2}";
                     
-                    OnDetectionResult?.Invoke(resultText);
-                    Console.WriteLine(resultText); 
+                        OnDetectionResult?.Invoke(resultText);
+                        _lastUpdate = DateTime.Now; // update the last inference time
+                        Console.WriteLine(resultText); 
+                    }
                 }
             }           
         }
         public void PredictFrame(CVPixelBuffer pixelBuffer)
         {
             if(_visionRequest == null) return;
-
-            // create a request handler with the input image
-            var handler = new VNImageRequestHandler(pixelBuffer, CGImagePropertyOrientation.Right , new VNImageOptions()); //add the orientatioin for correct inference result
-
-            //use ThreadPool to avoid blocking the main thread while performing the request
-            ThreadPool.QueueUserWorkItem(_ =>
+            // ensure that everytimes the inference end, the handler will be disposed to free up the memory
+            using(var handler = new VNImageRequestHandler(pixelBuffer, CGImagePropertyOrientation.Right , new VNImageOptions())) //add the orientatioin for correct inference result
             {
                 try
                 {
                     handler.Perform(new VNRequest[] {_visionRequest}, out var error);
-
                     //if there's an error during the request, log it
                     if(error != null)
                     {
@@ -135,9 +136,31 @@ namespace yoloTest
                 }
                 catch(Exception ex)
                 {
-                    Debug.WriteLine($"Inference Failed: {ex.Message}");
+                    Console.WriteLine($"Inference Failed: {ex.Message}");
                 }
-            });
+            }
+
+            //// create a request handler with the input image
+            //var handler = new VNImageRequestHandler(pixelBuffer, CGImagePropertyOrientation.Right , new VNImageOptions()); //add the orientatioin for correct inference result
+
+            ////use ThreadPool to avoid blocking the main thread while performing the request
+            //ThreadPool.QueueUserWorkItem(_ =>
+            //{
+            //    try
+            //    {
+            //        handler.Perform(new VNRequest[] {_visionRequest}, out var error);
+
+            //        //if there's an error during the request, log it
+            //        if(error != null)
+            //        {
+            //            Console.WriteLine($"Inference request Error : {error.LocalizedDescription}");
+            //        }
+            //    }
+            //    catch(Exception ex)
+            //    {
+            //        Debug.WriteLine($"Inference Failed: {ex.Message}");
+            //    }
+            //});
         }
 
 #endif
