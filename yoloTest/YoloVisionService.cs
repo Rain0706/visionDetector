@@ -18,7 +18,7 @@ namespace yoloTest
     public class YoloVisionService
     {
         //add a new assignment to return the result to MainPage
-        public Action<string>? OnDetectionResult { get; set; }
+        public Action<List<BoundingBoxInfo>>? OnDetectionResult { get; set; }
 
 #if IOS
         private VNCoreMLModel? _visionModel;
@@ -33,7 +33,7 @@ namespace yoloTest
                 var modelUrl = NSBundle.MainBundle.GetUrlForResource("best", "mlpackage");
                 if (modelUrl == null)
                 {
-                    Debug.WriteLine("couldn't find the best.mlpackage, please confirm the location of  file");
+                    Debug.WriteLine("couldn't find the best.mlpackage, please confirm the location of file");
                     return false;
                 }
                 // compile the model
@@ -73,7 +73,8 @@ namespace yoloTest
                         // if the output isn't the expected type, send the result to the phone screen to view
                         if(firstResultType != "VNRecognizedObjectObservation")
                         {
-                            OnDetectionResult?.Invoke($"The model's format is wrong, current output is :{firstResultType}");
+                            //OnDetectionResult?.Invoke($"The model's format is wrong, current output is :{firstResultType}");
+                            Console.WriteLine($"The model's format is wrong, current output is :{firstResultType}");
                             return;
                         }
                     }
@@ -94,30 +95,57 @@ namespace yoloTest
                 return false;
             }
         }
-        // add a variable to store the time of the last inference
-        private DateTime _lastUpdate = DateTime.MinValue;
+        //// add a variable to store the time of the last inference
+        //private DateTime _lastUpdate = DateTime.MinValue;
         private void ProcessObservationResults(VNRecognizedObjectObservation[]? observations)
         {
+            // create a empty list to store the bounding box
+            var boxList = new List<BoundingBoxInfo>();
             if (observations == null || observations.Length == 0) return;
-            var bestObservation = observations.OrderByDescending(o => o.Labels[0].Confidence).FirstOrDefault();
-            if(bestObservation != null)
+            if(observations != null && observations.Length > 0)
             {
-                //get the highest confidence label(ex: vehicle, pedestrian)
-                var bestLabel = bestObservation.Labels[0];
-                //for testing, we set the threshold to 0.2
-                //if(bestLabel.Confidence > 0.2)
-                if(bestLabel.Confidence > 0.4) // set a higher threshold to reduce the false positive
+                foreach(var observation in observations)
                 {
-                    if((DateTime.Now - _lastUpdate).TotalMilliseconds > 500) // check if it's been more than 500ms since the last inference reuslt
+                    //get tthe highest confidence label for each observation
+                    var bestLabel = observation.Labels[0];
+
+                    if(bestLabel.Confidence > 0.4)
                     {
-                        string resultText = $"{bestLabel.Identifier} detected with confidence {bestLabel.Confidence:F2}";
-                    
-                        OnDetectionResult?.Invoke(resultText);
-                        _lastUpdate = DateTime.Now; // update the last inference time
-                        Console.WriteLine(resultText); 
+                        // store the Label and coordinates into the list
+                        boxList.Add(new BoundingBoxInfo
+                        {
+                            ClassName = bestLabel.Identifier,
+                            Confidence = bestLabel.Confidence,
+                            X = (float)observation.BoundingBox.X,
+                            Y = (float)observation.BoundingBox.Y,
+                            Width = (float)observation.BoundingBox.Width,
+                            Height = (float)observation.BoundingBox.Height
+                        });
                     }
                 }
-            }           
+            }
+            // send the list of bounding boxes to the MainPage to update the UI
+            OnDetectionResult?.Invoke(boxList);
+
+            //var bestObservation = observations.OrderByDescending(o => o.Labels[0].Confidence).FirstOrDefault();
+            //if(bestObservation != null)
+            //{
+            //    //get the highest confidence label(ex: vehicle, pedestrian)
+            //    var bestLabel = bestObservation.Labels[0];
+            //    //for testing, we set the threshold to 0.2
+            //    //if(bestLabel.Confidence > 0.2)
+            //    if(bestLabel.Confidence > 0.4) // set a higher threshold to reduce the false positive
+            //    {
+            //        if((DateTime.Now - _lastUpdate).TotalMilliseconds > 500) // check if it's been more than 500ms since the last inference reuslt
+            //        {
+            //            string resultText = $"{bestLabel.Identifier} detected with confidence {bestLabel.Confidence:F2}";
+                    
+            //            OnDetectionResult?.Invoke(resultText);
+            //            _lastUpdate = DateTime.Now; // update the last inference time
+            //            Console.WriteLine(resultText); 
+            //        }
+            //    }
+            //}           
         }
         public void PredictFrame(CVPixelBuffer pixelBuffer)
         {

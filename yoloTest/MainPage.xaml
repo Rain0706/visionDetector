@@ -8,24 +8,16 @@
                      HorizontalOptions="Fill" 
                      VerticalOptions="Fill" />
 
+        <GraphicsView x:Name="BoundingBoxCanvas"
+                      HorizontalOptions="Fill"
+                      VerticalOptions="Fill"
+                      InputTransparent="True" />
+
         <VerticalStackLayout VerticalOptions="End" 
                              Padding="20" 
                              Spacing="15">
-
-            <Label x:Name="ResultLabel"
-                   Text="Ready"
-                   BackgroundColor="#99000000"
-                   TextColor="White"
-                   FontSize="18"
-                   Padding="10"
-                   HorizontalTextAlignment="Center" />
-
-            <Button x:Name="StartButton"
-                    Text="Start Identifying"
-                    Clicked="OnStartDetectionClicked"
-                    BackgroundColor="#007AFF"
-                    TextColor="White"
-                    FontAttributes="Bold" />
+            <Label x:Name="ResultLabel" Text="Be all set" BackgroundColor="#99000000" TextColor="White" FontSize="18" Padding="10" HorizontalTextAlignment="Center" />
+            <Button x:Name="StartButton" Text="Start Identifying" Clicked="OnStartDetectionClicked" BackgroundColor="#007AFF" TextColor="White" FontAttributes="Bold" />
         </VerticalStackLayout>
     </Grid>
 

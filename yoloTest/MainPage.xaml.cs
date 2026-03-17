@@ -7,6 +7,8 @@ namespace yoloTest
     public partial class MainPage : ContentPage
     {
         private YoloVisionService _visionService = new YoloVisionService();
+        private DetectionDrawable _detectionDrawable = new DetectionDrawable();
+        //create a drawable to store the detection results and draw them on the screen
         //int count = 0;
 
 #if IOS
@@ -16,13 +18,28 @@ namespace yoloTest
         public MainPage()
         {
             InitializeComponent();
+            // set the drawable engine to XAML canvas view
+            BoundingBoxCanvas.Drawable = _detectionDrawable;
             //register the AI detection, when there's a result, update the UI
-            _visionService.OnDetectionResult = (resultMessage) =>
+            _visionService.OnDetectionResult = (boxes) =>
             {
                 //force a return to the main thread to update the UI
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    ResultLabel.Text = resultMessage;
+                    //give the newesst list to Drawable Engine
+                    _detectionDrawable.Boxes = boxes;
+                    //force the canvas refresh immediately
+                    BoundingBoxCanvas.Invalidate();
+
+                    if (boxes.Count > 0)
+                    {
+                        ResultLabel.Text = $"{boxes.Count} object(s) detected";
+                    }
+                    else
+                    {
+                        ResultLabel.Text = "Environment is safe";
+                    }
+                    
                 });
             };
         }
