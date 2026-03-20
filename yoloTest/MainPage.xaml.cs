@@ -11,6 +11,9 @@ namespace yoloTest
         //create a drawable to store the detection results and draw them on the screen
         //int count = 0;
 
+        //record the time of last Speech
+        private DateTime _lastSpeechTime = DateTime.MinValue;
+
 #if IOS
         private Platforms.iOS.CameraStreamManager? _cameraStream;
 #endif
@@ -34,9 +37,44 @@ namespace yoloTest
                     if (boxes.Count > 0)
                     {
                         ResultLabel.Text = $"{boxes.Count} object(s) detected";
+
+                        //check if the time of last Speech is over 3 sec
+                        if((DateTime.Now - _lastSpeechTime).TotalSeconds > 5)
+                        {
+                            //Update the last Speech time to current time
+                            _lastSpeechTime = DateTime.Now;
+
+                            //count the amount of each class detected
+                            int vehicalCount = boxes.Count(b => b.ClassName == "vehicle");
+                            int pedestrianCount = boxes.Count(b => b.ClassName == "pedestrian");
+                            int potholeCount = boxes.Count(b => b.ClassName == "pothole");
+
+                            string warningText = "注意前方：";
+                            if (vehicalCount > 0) { warningText += $"{vehicalCount}輛車"; }
+                            if (pedestrianCount > 0) { warningText += $"{pedestrianCount}位行人"; }
+                            if (potholeCount > 0) {warningText += $"{potholeCount}個坑洞"; }
+
+                            Task.Run(async () =>
+                            {
+                                // get the list of available locales for text-to-Speech
+                                var locales = await TextToSpeech.Default.GetLocalesAsync();
+                                // find the zh-TW or any chinese locales in the list
+                                var chineseLocale = locales.FirstOrDefault(l =>
+                                    (l.Language != null && l.Language.Contains("zh")) ||
+                                    (l.Country != null && l.Country.Contains("TW")));
+                                // set the speech options
+                                var speechOptions = new SpeechOptions()
+                                {
+                                    Locale = chineseLocale,
+                                    Volume = 1.0f //ensure the volume is at maximum
+                                };
+
+                                await TextToSpeech.Default.SpeakAsync(warningText, speechOptions);
+                            });
+                        }
                     }
                     else
-                    {
+                    { 
                         ResultLabel.Text = "Environment is safe";
                     }
                     
@@ -50,7 +88,7 @@ namespace yoloTest
             if (status != PermissionStatus.Granted)
             {
                 status = await Permissions.RequestAsync<Permissions.Camera>();
-            }
+            } 
 
             if (status == PermissionStatus.Granted)
             {

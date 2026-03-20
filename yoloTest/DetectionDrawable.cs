@@ -16,15 +16,31 @@ namespace yoloTest
         {
             if (Boxes == null || Boxes.Count == 0) return;
 
+            // iPhone back camera Preset 640*480 when it Portrait
+            float videoAspet = 480f / 640f;
+            // to calculate the actual video width and height
+            float actualVideoWidth = dirtyRect.Width;
+            float actualVideoHeight = dirtyRect.Width / videoAspet;
+            // calculate the offset of the top and bottom borders
+            float yOffset = (dirtyRect.Height - actualVideoHeight) / 2;
+
             foreach (var box in Boxes)
             {
-                // convert the 0.0 to 1.0 ratio to the actual pixel count of the mobile phone
+                //convert the 0.0 to 1.0 ratio to the actual pixel count of the mobile phone
                 float x = box.X * dirtyRect.Width;
                 float width = box.Width * dirtyRect.Width;
                 float height = box.Height * dirtyRect.Height;
 
+                //// map the coordinates from 0 to 1 to the actual video display area
+                //float x = box.X * actualVideoWidth;
+                //float width = box.Width * actualVideoWidth;
+                //float height = box.Height * actualVideoHeight;
+
                 // we must subtract(Y + Height) from 1 to reverse the Y-axis
                 float y = (1 - box.Y - box.Height) * dirtyRect.Height;
+
+                //// reverse the Y-axis and add the offset
+                //float y = (1 - box.Y - box.Height) * actualVideoHeight + yOffset;
 
                 // draw the bounding box 
                 canvas.StrokeColor = Colors.Red;

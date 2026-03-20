@@ -16,8 +16,8 @@
         <VerticalStackLayout VerticalOptions="End" 
                              Padding="20" 
                              Spacing="15">
-            <Label x:Name="ResultLabel" Text="Be all set" BackgroundColor="#99000000" TextColor="White" FontSize="18" Padding="10" HorizontalTextAlignment="Center" />
-            <Button x:Name="StartButton" Text="Start Identifying" Clicked="OnStartDetectionClicked" BackgroundColor="#007AFF" TextColor="White" FontAttributes="Bold" />
+            <Label x:Name="ResultLabel" Text="準備就緒" BackgroundColor="#99000000" TextColor="White" FontSize="18" Padding="10" HorizontalTextAlignment="Center" />
+            <Button x:Name="StartButton" Text="開始辨識" Clicked="OnStartDetectionClicked" BackgroundColor="#007AFF" TextColor="White" FontAttributes="Bold" />
         </VerticalStackLayout>
     </Grid>
 
