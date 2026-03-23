@@ -54,6 +54,19 @@ namespace yoloTest
                             if (pedestrianCount > 0) { warningText += $"{pedestrianCount}位行人"; }
                             if (potholeCount > 0) {warningText += $"{potholeCount}個坑洞"; }
 
+                            //danger approach and vibration feedback
+                            bool isDangerouslyClose = boxes.Any(b =>
+                                (b.ClassName == "vehicle" || b.ClassName == "pothole") &&
+                                (b.Width * b.Height > 0.20f));
+
+                            if (isDangerouslyClose)
+                            {
+                                // modify the warning text to indicate the danger
+                                warningText = "警告！距離極近：" + warningText;
+                                // trigger the vibration for iOS
+                                HapticFeedback.Default.Perform(HapticFeedbackType.LongPress);
+                            }
+
                             Task.Run(async () =>
                             {
                                 // get the list of available locales for text-to-Speech
@@ -74,7 +87,7 @@ namespace yoloTest
                         }
                     }
                     else
-                    { 
+                    {
                         ResultLabel.Text = "Environment is safe";
                     }
                     
@@ -115,7 +128,7 @@ namespace yoloTest
                                 var uiView = CameraContainer.Handler?.PlatformView as UIKit.UIView;
                                 if(uiView != null && _cameraStream.Session != null)
                                 {
-                                    //get the length and width of the iPone's screen
+                                    //get the length and width of the iPhone's screen
                                     var screenBounds = UIKit.UIScreen.MainScreen.Bounds; 
                                     var previewLayer = new AVFoundation.AVCaptureVideoPreviewLayer(_cameraStream.Session)
                                     {
