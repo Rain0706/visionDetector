@@ -10,6 +10,7 @@ namespace yoloTest
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .UseMauiCommunityToolkit()
                 .UseMauiCommunityToolkitCamera() // 2. 鏈接相機工具組初始化
                 .ConfigureFonts(fonts =>
                 {
