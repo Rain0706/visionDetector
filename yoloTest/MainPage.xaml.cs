@@ -6,6 +6,8 @@ using System.Globalization;
 #if IOS
 using AVFoundation;
 using Foundation;
+using MediaPlayer; // for volume button detection
+using UIKit; // for volume button detection
 #endif
 
 namespace yoloTest
@@ -32,8 +34,11 @@ namespace yoloTest
 
         private int _buttonPressCount = 0; // 音量鍵求救變數
         private DateTime _firstPressTime = DateTime.MinValue;
+        private bool _isProgrammaticChange = false; // 用來區分是程式改變音量還是使用者按下音量鍵
 #if IOS
     private IDisposable? _volumeObserver;
+    private MPVolumeView? _hiddenVolumeView; // hide the volume slider that appears when we capture the volume button events
+    private UISlider? _volumeSlider;
 #endif
         protected override void OnAppearing()
         {
@@ -42,13 +47,30 @@ namespace yoloTest
 #if IOS
             try
             {
+                // 1. 建立一個隱藏的音量控制器 (移出螢幕外)，這能隱藏系統的音量彈窗
+                _hiddenVolumeView = new MPVolumeView(new CoreGraphics.CGRect(-100, -100, 10, 10)); 
+                var currentWindow = UIApplication.SharedApplication.KeyWindow;
+                currentWindow?.AddSubview(_hiddenVolumeView);
+
+                // 2. 找出裡面的 UISlider，用來強制控制音量
+                foreach (var view in _hiddenVolumeView.Subviews)
+                {
+                    if (view is UISlider slider)
+                    {
+                        _volumeSlider = slider;
+                        _volumeSlider.Value = 0.7f; // 初始化設定為 60%
+                        break;
+                    }
+                }
                 var audioSession = AVAudioSession.SharedInstance();
                 audioSession.SetActive(true, out _); //喚醒audio system
                 _volumeObserver = audioSession.AddObserver("outputVolume", NSKeyValueObservingOptions.New, (change) =>
                 {
+                    // get the current volume level
+                    float currentVol = audioSession.OutputVolume;
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
-                        OnVolumeButtonTapped();
+                        OnVolumeButtonTapped(currentVol); // send the current volume to the handler function
                     });
                 });
             }
@@ -71,6 +93,7 @@ namespace yoloTest
 #if IOS
             _volumeObserver?.Dispose();
             _volumeObserver = null;
+            _hiddenVolumeView.RemoveFromSuperview();
 #endif
             //if(Accelerometer.Default.IsSupported && Accelerometer.Default.IsMonitoring)
             //{
@@ -82,8 +105,13 @@ namespace yoloTest
 #if IOS
         private Platforms.iOS.CameraStreamManager? _cameraStream;
 #endif
-        private void OnVolumeButtonTapped()
+        private void OnVolumeButtonTapped(float currentVol)
         {
+            if (_isProgrammaticChange)
+            {
+                _isProgrammaticChange = false; // reset the flag
+                return;
+            }
             //若距離第一次按下超過3秒則重計數(防誤觸)
             if((DateTime.Now - _firstPressTime).TotalSeconds > 3) 
             {
@@ -102,10 +130,25 @@ namespace yoloTest
                 Task.Run(async () =>
                 {
                     await TextToSpeech.Default.SpeakAsync("啟動按鍵求救");
+                    
                 });
                 ExecuteEmergencySOS();
             }
+#if IOS
+            // 觸發後，強制把系統音量拉回60%，確保下次按壓有效 (because I found that if the volume is 100%, then it will not count whether I press the volume button)
+            if (_volumeSlider != null && (currentVol > 0.85f || currentVol <0.15f))
+            {
+                // 用 MainThread 確保 UI 更新不會衝突
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    //// 告訴系統：下一步是我程式自己要改的，你等一下不要計數！
+                    _isProgrammaticChange = true;
+                    _volumeSlider.Value = 0.7f;
+                });
+            }
+#endif
         }
+
         public MainPage()
         {
             InitializeComponent();
@@ -245,8 +288,21 @@ namespace yoloTest
                 {
                     string mapsLink = $"https://maps.google.com/?q={location.Latitude},{location.Longitude}";
                     string messageText = $"緊急求救！我現在的位置是：{mapsLink}";
-                    var message = new SmsMessage(messageText, new[] { "0989139581" });
-                    await Sms.Default.ComposeAsync(message);
+
+                    //將中文字與網址進行 URL 編碼，避免亂碼或解析錯誤
+                    string encodedText = Uri.EscapeDataString(messageText);
+
+                    //var message = new SmsMessage(messageText, new[] { "0989139581" });
+                    //await Clipboard.Default.SetTextAsync(messageText); //原本使用剪貼簿，改用直接傳參數進捷徑
+                    //await Sms.Default.ComposeAsync(null);
+
+                    // 2. 開啟捷徑 App (名稱叫 "AutoSend")
+                    //不用剪貼簿，直接把messageText傳給捷徑
+                    
+                    var uri = new Uri($"shortcuts://x-callback-url/run-shortcut?name=AutoSend&input=text&text={encodedText}&x-success=visionDetector://");
+                    await Launcher.Default.OpenAsync(uri);
+
+                    //await Clipboard.Default.SetTextAsync(null);
                 }
             }
             catch(Exception ex)

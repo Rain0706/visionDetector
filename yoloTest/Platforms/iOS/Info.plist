@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
+
 <dict>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
@@ -39,5 +40,16 @@
     
     	<key>NSSpeechRecognitionUsageDescription</key>
     	<string>需要語音辨識權限，以分析求救關鍵字。</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.rain.visionDetector</string> <!-- 建議填寫 App 的 Bundle ID -->
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>visionDetector</string> <!-- 這就是你要用的「myapp://」部分 -->
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
